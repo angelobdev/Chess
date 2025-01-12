@@ -31,29 +31,50 @@ void Chess::Game::restart(sf::String &fen)
         }
     }
 
-    // Resetting
-    m_CurrentTurn = Piece::Color::White;
-    m_CurrentSelectedIndex = -1;
-
-    // Updating board
+    // Updating board by parsing FEN string
     auto index = 0;
     for (auto symbol : fen)
     {
         if (symbol == '/')
             continue;
 
-        if (std::isdigit(symbol))
+        if(symbol == ' ')
+            index = 64;
+
+        if (index < 64)
         {
-            index += symbol - '0';
+            // Placing pieces
+            if (std::isdigit(symbol))
+            {
+                index += symbol - '0';
+            }
+            else
+            {
+                auto posIndex = (7 - index / 8) * 8 + index % 8;
+                m_Pieces[posIndex] = new Piece(symbol, m_Tile);
+                index++;
+            }
         }
         else
         {
-            auto posIndex = (7 - index / 8) * 8 + index % 8;
-            m_Pieces[posIndex] = new Piece(symbol, m_Tile);
-            std::cout << "Placed " << m_Pieces[posIndex]->toString() << " at index " << (posIndex) << " : " << indexToFRString(posIndex) << "\n";
-            index++;
+            // Parsing game info
+            if (symbol == 'w')
+            {
+                m_CurrentTurn = Piece::Color::White;
+            }
+            else if (symbol == 'b')
+            {
+                m_CurrentTurn = Piece::Color::Black;
+            }
+
+            // TODO:
         }
     }
+
+    // Resetting game
+    m_CurrentSelectedIndex = -1;
+    m_WhiteScore = 0;
+    m_BlackScore = 0;
 }
 
 void Chess::Game::handleClick(sf::Vector2i mousePos)

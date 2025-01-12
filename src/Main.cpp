@@ -16,6 +16,7 @@ int main()
 
     // Initializing Game and UI
     sf::String fenString = STANDARD_FEN;
+    char fenBuffer[256] = STANDARD_FEN;
     Chess::Game chess(gameWindow, fenString);
     if (!ImGui::SFML::Init(controlWindow))
     {
@@ -62,20 +63,38 @@ int main()
 
         ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
-        ImGui::TextColored(ImColor(255, 255, 128), "Control Panel");
-        if (ImGui::Button("Restart", ImVec2(240, 24)))
+        // RESET
+        ImGui::TextColored(ImColor(255, 255, 128), "Reset");
+        if (ImGui::Button("Reset", ImVec2(240, 24)))
         {
             chess.restart(fenString);
         };
-
+        ImGui::Spacing();
         ImGui::Separator();
+        ImGui::Spacing();
 
-        ImGui::TextColored(ImColor(255, 255, 128), "Current situation:");
+        // RESET WITH FEN
+        ImGui::TextColored(ImColor(255, 255, 128), "Restart with FEN");
+        ImGui::InputText("FEN", fenBuffer, IM_ARRAYSIZE(fenBuffer));
+        if (ImGui::Button("Restart", ImVec2(240, 24)))
+        {
+            sf::String newFen = fenBuffer;
+            // TODO: Validate
+            chess.restart(newFen);
+        };
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // INFORMATIONS
+        ImGui::TextColored(ImColor(255, 255, 128), "Informations:");
         ImGui::Text("Turn: %s", chess.getCurrentTurn() == Chess::Piece::Color::White ? "White" : "Black");
-
         ImGui::TextColored(ImColor(255, 255, 128), "Scores:");
         ImGui::Text("White: %u", chess.getWhiteScore());
         ImGui::Text("Black: %u", chess.getBlackScore());
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
         ImGui::End();
 

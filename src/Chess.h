@@ -5,7 +5,7 @@
 
 #include "Piece.h"
 
-#define STANDARD_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+#define STANDARD_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 namespace Chess
 {
