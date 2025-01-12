@@ -23,7 +23,7 @@ int main()
         std::cerr << "Failed to initialize ImGui!" << std::endl;
     }
 
-    // GAME LOOP
+    // GAME LOOP // TODO: Optimize rendering (only on event)
     sf::Clock deltaClock;
     while (gameWindow.isOpen() && controlWindow.isOpen())
     {
@@ -34,8 +34,7 @@ int main()
             {
                 gameWindow.close();
             }
-
-            if (event->is<sf::Event::MouseButtonPressed>())
+            else if (event->is<sf::Event::MouseButtonPressed>())
             {
                 chess.handleClick(sf::Mouse::getPosition(gameWindow));
             }

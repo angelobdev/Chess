@@ -44,17 +44,9 @@ namespace Chess
         static const sf::Texture BLACK_QUEEN_TEXTURE;
         static const sf::Texture BLACK_KING_TEXTURE;
 
-        // Pieces Values
-        static const byte PAWN_VALUE = 0b00010000;          // 1 point
-        static const byte KNIGHT_BISHOP_VALUE = 0b00110000; // 3 points
-        static const byte ROOK_VALUE = 0b01010000;          // 5 points
-        static const byte QUEEN_VALUE = 0b10010000;         // 9 points
-        static const byte KING_VALUE = 0b11110000;          // Invaluable
-
     private:
         // Piece Info
-        byte m_Descriptor; // Bits: V V V V / C T T T
-        bool m_HasMoved;
+        byte m_Descriptor; // Bits: n n n M / C T T T
 
         // Rendering
         sf::Sprite *p_Sprite;
@@ -81,19 +73,41 @@ namespace Chess
 
         bool hasMoved() const
         {
-            return this->m_HasMoved;
+            return (this->m_Descriptor & 0b00010000) >> 4;
         }
 
         unsigned int getValue() const
         {
-            return static_cast<unsigned int>(this->m_Descriptor >> 4);
+            unsigned int value = 0;
+            switch (getType())
+            {
+            case Piece::Type::Pawn:
+                return 1;
+            case Piece::Type::Knight:
+                return 3;
+            case Piece::Type::Bishop:
+                return 3;
+            case Piece::Type::Rook:
+                return 5;
+            case Piece::Type::Queen:
+                return 9;
+            default:
+                return -1;
+            }
         }
 
         // Setters
 
         void setMoved(bool moved)
         {
-            this->m_HasMoved = moved;
+            if (moved)
+            {
+                m_Descriptor |= 0b00010000;
+            }
+            else
+            {
+                m_Descriptor &= 0b11101111;
+            }
         }
 
         // Utilities

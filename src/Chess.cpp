@@ -38,7 +38,7 @@ void Chess::Game::restart(sf::String &fen)
         if (symbol == '/')
             continue;
 
-        if(symbol == ' ')
+        if (symbol == ' ')
             index = 64;
 
         if (index < 64)
