@@ -34,7 +34,6 @@ Simple 2D Chess Game made with C++ and [SFML](https://github.com/SFML/SFML) (+[I
   - [x] Current score
   - [ ] Captured pieces icons
 - [ ] Windowing
-  - [ ] Single UI/Game window
   - [ ] Resizable window
 
 ## Credits
