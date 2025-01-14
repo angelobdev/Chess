@@ -28,6 +28,10 @@ namespace Chess
 
         // Rendering
         sf::Color m_WhiteColor, m_BlackColor;
+
+        float m_BoardSize;
+        float m_GUIOffset;
+
         mutable sf::RectangleShape m_Tile;
         mutable sf::RectangleShape m_SelectedBox;
         mutable sf::RectangleShape m_PossibleMoveBox;
@@ -48,6 +52,8 @@ namespace Chess
         void handleClick(sf::Vector2i mousePos);
 
         void prepareGUI();
+
+        void resize(const sf::Vector2u newSize);
 
     private:
         void restart();

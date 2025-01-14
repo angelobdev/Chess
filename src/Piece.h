@@ -98,6 +98,11 @@ namespace Chess
 
         // Setters
 
+        void resizeSprite(sf::Vector2f tileSize)
+        {
+            p_Sprite->setScale(sf::Vector2f(tileSize.x / p_Sprite->getTexture().getSize().x, tileSize.y / p_Sprite->getTexture().getSize().y));
+        }
+
         void setMoved(bool moved)
         {
             if (moved)

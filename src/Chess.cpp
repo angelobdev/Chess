@@ -5,7 +5,11 @@ Chess::Game::Game(sf::RenderWindow &window, sf::Color whiteColor, sf::Color blac
       m_WhiteColor(whiteColor), m_BlackColor(blackColor),
       m_WhiteScore(0), m_BlackScore(0)
 {
-    auto tileSize = window.getSize().y / 8.0f;
+
+    m_BoardSize = window.getSize().y;
+    m_GUIOffset = window.getSize().x - m_BoardSize;
+    float tileSize = m_BoardSize / 8.0f;
+
     m_Tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 
     m_SelectedBox = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
@@ -17,6 +21,23 @@ Chess::Game::Game(sf::RenderWindow &window, sf::Color whiteColor, sf::Color blac
     m_PossibleMoveBox.setFillColor(sf::Color(0x00ff0055));
 
     restart();
+}
+
+void Chess::Game::resize(const sf::Vector2u newSize)
+{
+    m_BoardSize = newSize.y;
+    m_GUIOffset = newSize.x - m_BoardSize;
+    float tileSize = m_BoardSize / 8.0f;
+
+    m_Tile.setSize(sf::Vector2f(tileSize, tileSize));
+    m_SelectedBox.setSize(sf::Vector2f(tileSize, tileSize));
+    m_PossibleMoveBox.setSize(sf::Vector2f(tileSize, tileSize));
+
+    for (auto piece : m_Pieces)
+    {
+        if (piece != nullptr)
+            piece->resizeSprite(m_Tile.getSize());
+    }
 }
 
 void Chess::Game::restart()
@@ -79,10 +100,10 @@ void Chess::Game::restart()
 
 void Chess::Game::handleClick(sf::Vector2i mousePos)
 {
-    if (mousePos.x <= 256.0f)
+    if (mousePos.x <= m_GUIOffset)
         return;
 
-    int file = (mousePos.x - 256.0f) / static_cast<int>(m_Tile.getSize().x);
+    int file = (mousePos.x - m_GUIOffset) / static_cast<int>(m_Tile.getSize().x);
     int rank = 7 - (mousePos.y / static_cast<int>(m_Tile.getSize().y));
     int targetIndex = rank * 8 + file;
 
@@ -177,13 +198,13 @@ void Chess::Game::prepareGUI()
 {
     // Preparing UI
     ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(256, 600));
+    ImGui::SetNextWindowSize(ImVec2(m_GUIOffset, m_BoardSize));
 
     ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
     // RESET
     ImGui::TextColored(ImColor(255, 255, 128), "Reset");
-    if (ImGui::Button("Reset", ImVec2(240, 24)))
+    if (ImGui::Button("Reset"))
     {
         m_FenBuffer = STANDARD_FEN;
         restart();
@@ -195,7 +216,7 @@ void Chess::Game::prepareGUI()
     // RESET WITH FEN
     ImGui::TextColored(ImColor(255, 255, 128), "Restart with FEN");
     ImGui::InputText("FEN", m_FenBuffer.data(), m_FenBuffer.size());
-    if (ImGui::Button("Restart", ImVec2(240, 24)))
+    if (ImGui::Button("Restart"))
     {
         // TODO: Validate
         restart();
@@ -219,7 +240,7 @@ void Chess::Game::prepareGUI()
 
 void Chess::Game::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-    states.transform.translate(sf::Vector2f(256.0f, 0));
+    states.transform.translate(sf::Vector2f(m_GUIOffset, 0));
 
     // Rendering Board
     for (int i = 0; i < 64; i++)

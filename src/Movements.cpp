@@ -2,8 +2,6 @@
 
 void Chess::Game::calculatePossibleMoves(int index)
 {
-    std::cout << "Calculating possible moves!" << std::endl;
-
     m_Movements.clear();
 
     switch (m_Pieces[index]->getType())
