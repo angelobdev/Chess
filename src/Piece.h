@@ -46,7 +46,7 @@ namespace Chess
 
     private:
         // Piece Info
-        byte m_Descriptor; // Bits: n n n M / C T T T
+        byte m_Descriptor; // Bits: n n E M / C T T T
 
         // Rendering
         sf::Sprite *p_Sprite;
@@ -57,6 +57,13 @@ namespace Chess
         ~Piece()
         {
             delete p_Sprite;
+        }
+
+        // Methods
+
+        void resizeSprite(sf::Vector2f tileSize)
+        {
+            p_Sprite->setScale(sf::Vector2f(tileSize.x / p_Sprite->getTexture().getSize().x, tileSize.y / p_Sprite->getTexture().getSize().y));
         }
 
         // Getters
@@ -74,6 +81,11 @@ namespace Chess
         bool hasMoved() const
         {
             return (this->m_Descriptor & 0b00010000) >> 4;
+        }
+
+        bool isEnPassantVulnerable() const
+        {
+            return (this->m_Descriptor & 0b00100000) >> 5;
         }
 
         unsigned int getValue() const
@@ -98,11 +110,6 @@ namespace Chess
 
         // Setters
 
-        void resizeSprite(sf::Vector2f tileSize)
-        {
-            p_Sprite->setScale(sf::Vector2f(tileSize.x / p_Sprite->getTexture().getSize().x, tileSize.y / p_Sprite->getTexture().getSize().y));
-        }
-
         void setMoved(bool moved)
         {
             if (moved)
@@ -112,6 +119,18 @@ namespace Chess
             else
             {
                 m_Descriptor &= 0b11101111;
+            }
+        }
+
+        void setEnPassantVulnerable(bool vul)
+        {
+            if (vul)
+            {
+                m_Descriptor |= 0b00100000;
+            }
+            else
+            {
+                m_Descriptor &= 0b11011111;
             }
         }
 

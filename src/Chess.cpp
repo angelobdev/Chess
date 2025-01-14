@@ -146,6 +146,41 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
                     }
                 }
             }
+            else
+            {
+                // Check for en passant
+                if (currentSelectedPiece()->getType() == Piece::Type::Pawn)
+                {
+                    int startRank = indexToRank(m_CurrentSelectedIndex);
+                    int targetRank = indexToRank(targetIndex);
+
+                    if (abs(startRank - targetRank) == 2)
+                    {
+                        currentSelectedPiece()->setEnPassantVulnerable(true);
+                    }
+                    else
+                    {
+                        currentSelectedPiece()->setEnPassantVulnerable(false);
+                    }
+
+                    // Capture en passant
+                    int enPassantTarget = targetIndex + (m_CurrentTurn == Piece::Color::White ? -8 : 8);
+                    if (targetPiece == nullptr && std::find(m_Movements.begin(), m_Movements.end(), targetIndex) != m_Movements.end() && m_Pieces[enPassantTarget] != nullptr && m_Pieces[enPassantTarget]->getType() == Piece::Type::Pawn && m_Pieces[enPassantTarget]->isEnPassantVulnerable())
+                    {
+                        if (currentSelectedPiece()->getColor() == Piece::Color::White)
+                        {
+                            m_WhiteScore += m_Pieces[enPassantTarget]->getValue();
+                        }
+                        else
+                        {
+                            m_BlackScore += m_Pieces[enPassantTarget]->getValue();
+                        }
+
+                        delete m_Pieces[enPassantTarget];
+                        m_Pieces[enPassantTarget] = nullptr;
+                    }
+                }
+            }
 
             currentSelectedPiece()->setMoved(true);
             swapPieces(m_CurrentSelectedIndex, targetIndex);
@@ -164,7 +199,7 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
                     return; // Target index is not a valid move
                 }
 
-                // Updating scores // TODO: Add captured symbols
+                // Updating scores
                 if (currentSelectedPiece()->getColor() == Piece::Color::White)
                 {
                     m_WhiteScore += targetPiece->getValue();

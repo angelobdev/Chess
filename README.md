@@ -17,8 +17,8 @@ Simple 2D Chess Game made with C++ and [SFML](https://github.com/SFML/SFML) (+[I
   - [x] Rendering
   - [x] FEN Parser
 - [ ] Movements
-  - [ ] Pawn
-    - [ ] En Passant
+  - [x] Pawn
+    - [x] En Passant
   - [x] Rook
   - [x] Knight
   - [x] Bishop

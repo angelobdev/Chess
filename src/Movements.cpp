@@ -79,6 +79,30 @@ void Chess::Game::calculatePawnMoves(int index)
         }
     }
 
+    // En passant
+    if (startRank == (pawn->getColor() == Piece::Color::White ? 4 : 3))
+    {
+        int leftFile = startFile - 1;
+        int rightFile = startFile + 1;
+        int enPassantRank = startRank + dir;
+
+        if (leftFile >= 0 && m_Pieces[fileRankToIndex(leftFile, startRank)] != nullptr &&
+            m_Pieces[fileRankToIndex(leftFile, startRank)]->getType() == Piece::Type::Pawn &&
+            m_Pieces[fileRankToIndex(leftFile, startRank)]->getColor() != pawn->getColor() &&
+            m_Pieces[fileRankToIndex(leftFile, startRank)]->isEnPassantVulnerable())
+        {
+            m_Movements.push_back(fileRankToIndex(leftFile, enPassantRank));
+        }
+
+        if (rightFile < 8 && m_Pieces[fileRankToIndex(rightFile, startRank)] != nullptr &&
+            m_Pieces[fileRankToIndex(rightFile, startRank)]->getType() == Piece::Type::Pawn &&
+            m_Pieces[fileRankToIndex(rightFile, startRank)]->getColor() != pawn->getColor() &&
+            m_Pieces[fileRankToIndex(rightFile, startRank)]->isEnPassantVulnerable())
+        {
+            m_Movements.push_back(fileRankToIndex(rightFile, enPassantRank));
+        }
+    }
+
     // Capture diagonally
     int captureLeftIndex = fileRankToIndex(startFile - 1, startRank + dir);
     int captureRightIndex = fileRankToIndex(startFile + 1, startRank + dir);
