@@ -33,14 +33,14 @@ Simple 2D Chess Game made with C++ and [SFML](https://github.com/SFML/SFML) (+[I
   - [x] Current turn
   - [x] Current score
   - [ ] Captured pieces icons
-- [ ] Windowing
-  - [ ] Resizable window
+- [x] Windowing
+  - [x] Resizable window
 
 ## Credits
 
 - Template: [CMake SFML Template](https://github.com/SFML/cmake-sfml-project)
 
-- Textures: \_I lost track of credits/license of pieces textures... if you know who made them let me know opening an issue in this repo_fml
+- Textures: *I lost track of credits/license of pieces textures... if you know who made them let me know opening an issue in this repo*
 
 ---
 
