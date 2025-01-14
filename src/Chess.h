@@ -1,11 +1,13 @@
 #pragma once
 
-#include <array>
 #include <SFML/Graphics.hpp>
+#include <array>
+#include <imgui.h>
+#include <imgui-SFML.h>
 
 #include "Piece.h"
 
-#define STANDARD_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+constexpr auto STANDARD_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 namespace Chess
 {
@@ -14,6 +16,7 @@ namespace Chess
     private:
         // Info
         std::array<Piece *, 64> m_Pieces;
+        mutable std::string m_FenBuffer;
 
         Piece::Color m_CurrentTurn;
         int m_CurrentSelectedIndex;
@@ -30,7 +33,7 @@ namespace Chess
         mutable sf::RectangleShape m_PossibleMoveBox;
 
     public:
-        Game(sf::RenderWindow &window, sf::String &fen, sf::Color whiteColor = sf::Color(0xf1d7c0ff), sf::Color blackColor = sf::Color(0xa97a65ff));
+        Game(sf::RenderWindow &window, sf::Color whiteColor = sf::Color(0xf1d7c0ff), sf::Color blackColor = sf::Color(0xa97a65ff));
 
         ~Game()
         {
@@ -42,28 +45,13 @@ namespace Chess
 
         // Methods
 
-        void restart(sf::String &fen);
-
         void handleClick(sf::Vector2i mousePos);
 
-        // Getters
-
-        Piece::Color getCurrentTurn() const
-        {
-            return m_CurrentTurn;
-        }
-
-        unsigned int getWhiteScore() const
-        {
-            return m_WhiteScore;
-        }
-
-        unsigned int getBlackScore() const
-        {
-            return m_BlackScore;
-        }
+        void prepareGUI();
 
     private:
+        void restart();
+
         virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
         void switchTurn()

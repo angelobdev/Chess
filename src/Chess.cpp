@@ -1,11 +1,11 @@
 #include "Chess.h"
 
-Chess::Game::Game(sf::RenderWindow &window, sf::String &fen, sf::Color whiteColor, sf::Color blackColor)
-    : m_Pieces(),
+Chess::Game::Game(sf::RenderWindow &window, sf::Color whiteColor, sf::Color blackColor)
+    : m_Pieces(), m_FenBuffer(STANDARD_FEN),
       m_WhiteColor(whiteColor), m_BlackColor(blackColor),
       m_WhiteScore(0), m_BlackScore(0)
 {
-    auto tileSize = window.getSize().x / 8.0f;
+    auto tileSize = window.getSize().y / 8.0f;
     m_Tile = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
 
     m_SelectedBox = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
@@ -16,10 +16,10 @@ Chess::Game::Game(sf::RenderWindow &window, sf::String &fen, sf::Color whiteColo
     m_PossibleMoveBox = sf::RectangleShape(sf::Vector2f(tileSize, tileSize));
     m_PossibleMoveBox.setFillColor(sf::Color(0x00ff0055));
 
-    restart(fen);
+    restart();
 }
 
-void Chess::Game::restart(sf::String &fen)
+void Chess::Game::restart()
 {
     // Clearing
     for (int i = 0; i < 64; i++)
@@ -33,7 +33,7 @@ void Chess::Game::restart(sf::String &fen)
 
     // Updating board by parsing FEN string
     auto index = 0;
-    for (auto symbol : fen)
+    for (auto symbol : m_FenBuffer)
     {
         if (symbol == '/')
             continue;
@@ -79,7 +79,10 @@ void Chess::Game::restart(sf::String &fen)
 
 void Chess::Game::handleClick(sf::Vector2i mousePos)
 {
-    int file = mousePos.x / static_cast<int>(m_Tile.getSize().x);
+    if (mousePos.x <= 256.0f)
+        return;
+
+    int file = (mousePos.x - 256.0f) / static_cast<int>(m_Tile.getSize().x);
     int rank = 7 - (mousePos.y / static_cast<int>(m_Tile.getSize().y));
     int targetIndex = rank * 8 + file;
 
@@ -170,8 +173,54 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
     }
 }
 
+void Chess::Game::prepareGUI()
+{
+    // Preparing UI
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(256, 600));
+
+    ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+
+    // RESET
+    ImGui::TextColored(ImColor(255, 255, 128), "Reset");
+    if (ImGui::Button("Reset", ImVec2(240, 24)))
+    {
+        m_FenBuffer = STANDARD_FEN;
+        restart();
+    };
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // RESET WITH FEN
+    ImGui::TextColored(ImColor(255, 255, 128), "Restart with FEN");
+    ImGui::InputText("FEN", m_FenBuffer.data(), m_FenBuffer.size());
+    if (ImGui::Button("Restart", ImVec2(240, 24)))
+    {
+        // TODO: Validate
+        restart();
+    };
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // INFORMATIONS
+    ImGui::TextColored(ImColor(255, 255, 128), "Informations:");
+    ImGui::Text("Turn: %s", m_CurrentTurn == Chess::Piece::Color::White ? "White" : "Black");
+    ImGui::TextColored(ImColor(255, 255, 128), "Scores:");
+    ImGui::Text("White: %u", m_WhiteScore);
+    ImGui::Text("Black: %u", m_BlackScore);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGui::End();
+}
+
 void Chess::Game::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+    states.transform.translate(sf::Vector2f(256.0f, 0));
+
     // Rendering Board
     for (int i = 0; i < 64; i++)
     {
@@ -181,14 +230,14 @@ void Chess::Game::draw(sf::RenderTarget &target, sf::RenderStates states) const
         // Drawing tile
         m_Tile.setPosition(sf::Vector2f(file * m_Tile.getSize().x, (7 - rank) * m_Tile.getSize().y));
         m_Tile.setFillColor((file + rank) % 2 == 0 ? m_BlackColor : m_WhiteColor);
-        target.draw(m_Tile);
+        target.draw(m_Tile, states);
 
         // Drawing piece
         auto piece = m_Pieces[i];
         if (piece != nullptr)
         {
             piece->setPosition(sf::Vector2f(file * m_Tile.getSize().x, (7 - rank) * m_Tile.getSize().y));
-            target.draw(*piece);
+            target.draw(*piece, states);
         }
     }
 
@@ -200,7 +249,7 @@ void Chess::Game::draw(sf::RenderTarget &target, sf::RenderStates states) const
 
         // Selected overlay
         m_SelectedBox.setPosition(sf::Vector2f(file * m_SelectedBox.getSize().x, (7 - rank) * m_SelectedBox.getSize().y));
-        target.draw(m_SelectedBox);
+        target.draw(m_SelectedBox, states);
 
         // Movements overlays
         for (auto movePos : m_Movements)
@@ -209,7 +258,7 @@ void Chess::Game::draw(sf::RenderTarget &target, sf::RenderStates states) const
             int moveRank = indexToRank(movePos);
 
             m_PossibleMoveBox.setPosition(sf::Vector2f(moveFile * m_PossibleMoveBox.getSize().x, (7 - moveRank) * m_PossibleMoveBox.getSize().y));
-            target.draw(m_PossibleMoveBox);
+            target.draw(m_PossibleMoveBox, states);
         }
     }
 }
