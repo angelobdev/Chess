@@ -2,7 +2,7 @@
 
 void Chess::Game::calculatePossibleMoves(int index)
 {
-    m_Movements.clear();
+    m_PossibleMoves.clear();
 
     switch (m_Pieces[index]->getType())
     {
@@ -39,13 +39,13 @@ void Chess::Game::addMovesInDirection(int startFile, int startRank, int fileIncr
         int targetIndex = fileRankToIndex(file, rank);
         if (m_Pieces[targetIndex] == nullptr)
         {
-            m_Movements.push_back(targetIndex);
+            m_PossibleMoves.push_back(targetIndex);
         }
         else
         {
             if (m_Pieces[targetIndex]->getColor() != pieceColor)
             {
-                m_Movements.push_back(targetIndex);
+                m_PossibleMoves.push_back(targetIndex);
             }
             break;
         }
@@ -66,7 +66,7 @@ void Chess::Game::calculatePawnMoves(int index)
     int forwardIndex = fileRankToIndex(startFile, startRank + dir);
     if (isValidIndex(forwardIndex) && m_Pieces[forwardIndex] == nullptr)
     {
-        m_Movements.push_back(forwardIndex);
+        m_PossibleMoves.push_back(forwardIndex);
 
         // Move two squares forward from starting position
         if (!pawn->hasMoved())
@@ -74,7 +74,7 @@ void Chess::Game::calculatePawnMoves(int index)
             int doubleForwardIndex = fileRankToIndex(startFile, startRank + dir * 2);
             if (isValidIndex(doubleForwardIndex) && m_Pieces[doubleForwardIndex] == nullptr)
             {
-                m_Movements.push_back(doubleForwardIndex);
+                m_PossibleMoves.push_back(doubleForwardIndex);
             }
         }
     }
@@ -91,7 +91,7 @@ void Chess::Game::calculatePawnMoves(int index)
             m_Pieces[fileRankToIndex(leftFile, startRank)]->getColor() != pawn->getColor() &&
             m_Pieces[fileRankToIndex(leftFile, startRank)]->isEnPassantVulnerable())
         {
-            m_Movements.push_back(fileRankToIndex(leftFile, enPassantRank));
+            m_PossibleMoves.push_back(fileRankToIndex(leftFile, enPassantRank));
         }
 
         if (rightFile < 8 && m_Pieces[fileRankToIndex(rightFile, startRank)] != nullptr &&
@@ -99,7 +99,7 @@ void Chess::Game::calculatePawnMoves(int index)
             m_Pieces[fileRankToIndex(rightFile, startRank)]->getColor() != pawn->getColor() &&
             m_Pieces[fileRankToIndex(rightFile, startRank)]->isEnPassantVulnerable())
         {
-            m_Movements.push_back(fileRankToIndex(rightFile, enPassantRank));
+            m_PossibleMoves.push_back(fileRankToIndex(rightFile, enPassantRank));
         }
     }
 
@@ -110,13 +110,13 @@ void Chess::Game::calculatePawnMoves(int index)
     if (startFile > 0 && isValidIndex(captureLeftIndex) && m_Pieces[captureLeftIndex] != nullptr &&
         m_Pieces[captureLeftIndex]->getColor() != pawn->getColor())
     {
-        m_Movements.push_back(captureLeftIndex);
+        m_PossibleMoves.push_back(captureLeftIndex);
     }
 
     if (startFile < 7 && isValidIndex(captureRightIndex) && m_Pieces[captureRightIndex] != nullptr &&
         m_Pieces[captureRightIndex]->getColor() != pawn->getColor())
     {
-        m_Movements.push_back(captureRightIndex);
+        m_PossibleMoves.push_back(captureRightIndex);
     }
 }
 
@@ -150,7 +150,7 @@ void Chess::Game::calculateKnightMoves(int index)
             int targetIndex = fileRankToIndex(file, rank);
             if (m_Pieces[targetIndex] == nullptr || m_Pieces[targetIndex]->getColor() != knight->getColor())
             {
-                m_Movements.push_back(targetIndex);
+                m_PossibleMoves.push_back(targetIndex);
             }
         }
     }
@@ -203,7 +203,7 @@ void Chess::Game::calculateKingMoves(int index)
             int targetIndex = fileRankToIndex(file, rank);
             if (m_Pieces[targetIndex] == nullptr || m_Pieces[targetIndex]->getColor() != king->getColor())
             {
-                m_Movements.push_back(targetIndex);
+                m_PossibleMoves.push_back(targetIndex);
             }
         }
     }
@@ -227,7 +227,7 @@ void Chess::Game::calculateKingMoves(int index)
             }
             if (pathClear)
             {
-                m_Movements.push_back(fileRankToIndex(startFile + 2, startRank));
+                m_PossibleMoves.push_back(fileRankToIndex(startFile + 2, startRank));
             }
         }
 
@@ -247,7 +247,7 @@ void Chess::Game::calculateKingMoves(int index)
             }
             if (pathClear)
             {
-                m_Movements.push_back(fileRankToIndex(startFile - 2, startRank));
+                m_PossibleMoves.push_back(fileRankToIndex(startFile - 2, startRank));
             }
         }
     }

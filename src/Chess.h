@@ -1,11 +1,15 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <array>
 #include <imgui.h>
 #include <imgui-SFML.h>
 
+#include <vector>
+#include <array>
+#include <queue>
+
 #include "Piece.h"
+#include "Move.h"
 
 constexpr auto STANDARD_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -21,7 +25,8 @@ namespace Chess
         Piece::Color m_CurrentTurn;
         int m_CurrentSelectedIndex;
 
-        std::vector<int> m_Movements;
+        std::vector<int> m_PossibleMoves;
+        std::queue<Move> m_MovesHistory;
 
         unsigned int m_WhiteScore;
         unsigned int m_BlackScore;
@@ -60,11 +65,6 @@ namespace Chess
 
         virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const;
 
-        void switchTurn()
-        {
-            m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
-        }
-
         Piece *currentSelectedPiece()
         {
             if (m_CurrentSelectedIndex != -1)
@@ -72,13 +72,9 @@ namespace Chess
             return nullptr;
         }
 
-        void swapPieces(int from, int to)
-        {
-            if (from < 0 || from >= 64 || to < 0 || to >= 64)
-                return;
-
-            std::swap(m_Pieces[from], m_Pieces[to]);
-        }
+        void registerMove(int from, int to);
+        void registerCastlingMove(int kingFrom, int kingTo, int rookFrom, int rookTo);
+        void registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIndex);
 
         void calculatePossibleMoves(int index);
 

@@ -124,7 +124,7 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
         if (targetPiece == nullptr)
         {
             // Moving to an empty spot
-            if (std::find(m_Movements.begin(), m_Movements.end(), targetIndex) == m_Movements.end())
+            if (std::find(m_PossibleMoves.begin(), m_PossibleMoves.end(), targetIndex) == m_PossibleMoves.end())
             {
                 return; // Target index is not a valid move
             }
@@ -133,17 +133,16 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
             if (currentSelectedPiece()->getType() == Piece::Type::King && !currentSelectedPiece()->hasMoved())
             {
                 int fileDiff = targetIndex % 8 - m_CurrentSelectedIndex % 8;
+
                 if (std::abs(fileDiff) == 2)
                 {
                     // Castling move
                     int rookStartIndex = (fileDiff > 0) ? m_CurrentSelectedIndex + 3 : m_CurrentSelectedIndex - 4;
                     int rookEndIndex = (fileDiff > 0) ? m_CurrentSelectedIndex + 1 : m_CurrentSelectedIndex - 1;
 
-                    if (m_Pieces[rookStartIndex] != nullptr && m_Pieces[rookStartIndex]->getType() == Piece::Type::Rook && !m_Pieces[rookStartIndex]->hasMoved())
-                    {
-                        swapPieces(rookStartIndex, rookEndIndex);
-                        m_Pieces[rookEndIndex]->setMoved(true);
-                    }
+                    registerCastlingMove(m_CurrentSelectedIndex, targetIndex, rookStartIndex, rookEndIndex);
+                    m_CurrentSelectedIndex = -1;
+                    return;
                 }
             }
             else
@@ -154,7 +153,7 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
                     int startRank = indexToRank(m_CurrentSelectedIndex);
                     int targetRank = indexToRank(targetIndex);
 
-                    if (abs(startRank - targetRank) == 2)
+                    if (std::abs(startRank - targetRank) == 2)
                     {
                         currentSelectedPiece()->setEnPassantVulnerable(true);
                     }
@@ -165,28 +164,17 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
 
                     // Capture en passant
                     int enPassantTarget = targetIndex + (m_CurrentTurn == Piece::Color::White ? -8 : 8);
-                    if (targetPiece == nullptr && std::find(m_Movements.begin(), m_Movements.end(), targetIndex) != m_Movements.end() && m_Pieces[enPassantTarget] != nullptr && m_Pieces[enPassantTarget]->getType() == Piece::Type::Pawn && m_Pieces[enPassantTarget]->isEnPassantVulnerable())
+                    if (targetPiece == nullptr && std::find(m_PossibleMoves.begin(), m_PossibleMoves.end(), targetIndex) != m_PossibleMoves.end() && m_Pieces[enPassantTarget] != nullptr && m_Pieces[enPassantTarget]->getType() == Piece::Type::Pawn && m_Pieces[enPassantTarget]->isEnPassantVulnerable())
                     {
-                        if (currentSelectedPiece()->getColor() == Piece::Color::White)
-                        {
-                            m_WhiteScore += m_Pieces[enPassantTarget]->getValue();
-                        }
-                        else
-                        {
-                            m_BlackScore += m_Pieces[enPassantTarget]->getValue();
-                        }
-
-                        delete m_Pieces[enPassantTarget];
-                        m_Pieces[enPassantTarget] = nullptr;
+                        registerEnPassantMove(m_CurrentSelectedIndex, targetIndex, enPassantTarget);
+                        m_CurrentSelectedIndex = -1;
+                        return;
                     }
                 }
             }
 
-            currentSelectedPiece()->setMoved(true);
-            swapPieces(m_CurrentSelectedIndex, targetIndex);
+            registerMove(m_CurrentSelectedIndex, targetIndex);
             m_CurrentSelectedIndex = -1;
-
-            switchTurn();
         }
         else
         {
@@ -194,30 +182,13 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
             if (targetPiece->getColor() != currentSelectedPiece()->getColor())
             {
                 // Different color: capturing
-                if (std::find(m_Movements.begin(), m_Movements.end(), targetIndex) == m_Movements.end())
+                if (std::find(m_PossibleMoves.begin(), m_PossibleMoves.end(), targetIndex) == m_PossibleMoves.end())
                 {
                     return; // Target index is not a valid move
                 }
 
-                // Updating scores
-                if (currentSelectedPiece()->getColor() == Piece::Color::White)
-                {
-                    m_WhiteScore += targetPiece->getValue();
-                }
-                else
-                {
-                    m_BlackScore += targetPiece->getValue();
-                }
-
-                delete m_Pieces[targetIndex];
-                m_Pieces[targetIndex] = nullptr;
-
-                currentSelectedPiece()->setMoved(true);
-
-                swapPieces(m_CurrentSelectedIndex, targetIndex);
+                registerMove(m_CurrentSelectedIndex, targetIndex);
                 m_CurrentSelectedIndex = -1;
-
-                switchTurn();
             }
             else
             {
@@ -227,6 +198,79 @@ void Chess::Game::handleClick(sf::Vector2i mousePos)
             }
         }
     }
+}
+
+void Chess::Game::registerMove(int from, int to)
+{
+    if (from < 0 || from >= 64 || to < 0 || to >= 64)
+        return;
+
+    // Check for capture
+    if (m_Pieces[to] != nullptr)
+    {
+        // Update scores
+        if (m_CurrentTurn == Piece::Color::White)
+        {
+            m_WhiteScore += m_Pieces[to]->getValue();
+        }
+        else
+        {
+            m_BlackScore += m_Pieces[to]->getValue();
+        }
+
+        delete m_Pieces[to];
+        m_Pieces[to] = nullptr;
+    }
+
+    // Move
+    m_Pieces[from]->setMoved(true);
+    std::swap(m_Pieces[from], m_Pieces[to]);
+
+    // swich turn
+    m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
+
+    // TODO: register movement
+}
+
+void Chess::Game::registerCastlingMove(int kingFrom, int kingTo, int rookFrom, int rookTo)
+{
+    std::cout << "Moving king from " << indexToFRString(kingFrom) << " to " << indexToFRString(kingTo) << '\n';
+    std::cout << "Moving rook from " << indexToFRString(rookFrom) << " to " << indexToFRString(rookTo) << '\n';
+
+    if (kingFrom < 0 || kingFrom >= 64 || kingTo < 0 || kingTo >= 64 || rookFrom < 0 || rookFrom >= 64 || rookTo < 0 || rookTo >= 64)
+        return;
+
+    // Move the king
+    m_Pieces[kingFrom]->setMoved(true);
+    std::swap(m_Pieces[kingFrom], m_Pieces[kingTo]);
+
+    // Move the rook
+    m_Pieces[rookFrom]->setMoved(true);
+    std::swap(m_Pieces[rookFrom], m_Pieces[rookTo]);
+
+    // Switch turn
+    m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
+
+    // TODO: register movement
+}
+
+void Chess::Game::registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIndex)
+{
+    if (pawnFrom < 0 || pawnFrom >= 64 || pawnTo < 0 || pawnTo >= 64 || capturedIndex < 0 || capturedIndex >= 64)
+        return;
+
+    // Move the pawn
+    m_Pieces[pawnFrom]->setMoved(true);
+    std::swap(m_Pieces[pawnFrom], m_Pieces[pawnTo]);
+
+    // Capture the pawn
+    delete m_Pieces[capturedIndex];
+    m_Pieces[capturedIndex] = nullptr;
+
+    // Switch turn
+    m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
+
+    // TODO: register movement
 }
 
 void Chess::Game::prepareGUI()
@@ -308,7 +352,7 @@ void Chess::Game::draw(sf::RenderTarget &target, sf::RenderStates states) const
         target.draw(m_SelectedBox, states);
 
         // Movements overlays
-        for (auto movePos : m_Movements)
+        for (auto movePos : m_PossibleMoves)
         {
             int moveFile = indexToFile(movePos);
             int moveRank = indexToRank(movePos);
