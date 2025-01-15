@@ -9,8 +9,8 @@ namespace Chess
         int from;
         int to;
 
-        char movedPieceDescriptor;
-        char capturedPieceDescriptor;
+        char movedPieceSymbol;
+        char otherPieceSymbol;
     };
 
     struct CastlingMove : public Move

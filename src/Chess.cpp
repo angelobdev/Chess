@@ -205,6 +205,9 @@ void Chess::Game::registerMove(int from, int to)
     if (from < 0 || from >= 64 || to < 0 || to >= 64)
         return;
 
+    char pieceSymbol = m_Pieces[from]->getSymbol();
+    char capturedSymbol = 'x';
+
     // Check for capture
     if (m_Pieces[to] != nullptr)
     {
@@ -218,6 +221,10 @@ void Chess::Game::registerMove(int from, int to)
             m_BlackScore += m_Pieces[to]->getValue();
         }
 
+        // Update symbol
+        capturedSymbol = m_Pieces[to]->getSymbol();
+
+        // Remove
         delete m_Pieces[to];
         m_Pieces[to] = nullptr;
     }
@@ -226,19 +233,20 @@ void Chess::Game::registerMove(int from, int to)
     m_Pieces[from]->setMoved(true);
     std::swap(m_Pieces[from], m_Pieces[to]);
 
-    // swich turn
+    // Switch turn
     m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
 
-    // TODO: register movement
+    // Register movement
+    m_MovesHistory.push(Move{from, to, pieceSymbol, capturedSymbol});
 }
 
 void Chess::Game::registerCastlingMove(int kingFrom, int kingTo, int rookFrom, int rookTo)
 {
-    std::cout << "Moving king from " << indexToFRString(kingFrom) << " to " << indexToFRString(kingTo) << '\n';
-    std::cout << "Moving rook from " << indexToFRString(rookFrom) << " to " << indexToFRString(rookTo) << '\n';
-
     if (kingFrom < 0 || kingFrom >= 64 || kingTo < 0 || kingTo >= 64 || rookFrom < 0 || rookFrom >= 64 || rookTo < 0 || rookTo >= 64)
         return;
+
+    char kingSymbol = m_Pieces[kingFrom]->getSymbol();
+    char rookSymbol = m_Pieces[rookFrom]->getSymbol();
 
     // Move the king
     m_Pieces[kingFrom]->setMoved(true);
@@ -251,13 +259,17 @@ void Chess::Game::registerCastlingMove(int kingFrom, int kingTo, int rookFrom, i
     // Switch turn
     m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
 
-    // TODO: register movement
+    // Register movement
+    m_MovesHistory.push(CastlingMove{kingFrom, kingTo, kingSymbol, rookSymbol, rookFrom, rookTo});
 }
 
 void Chess::Game::registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIndex)
 {
     if (pawnFrom < 0 || pawnFrom >= 64 || pawnTo < 0 || pawnTo >= 64 || capturedIndex < 0 || capturedIndex >= 64)
         return;
+
+    char pieceSymbol = m_Pieces[pawnFrom]->getSymbol();
+    char capturedSymbol = m_Pieces[capturedIndex]->getSymbol();
 
     // Move the pawn
     m_Pieces[pawnFrom]->setMoved(true);
@@ -270,7 +282,8 @@ void Chess::Game::registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIn
     // Switch turn
     m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
 
-    // TODO: register movement
+    // Register movement
+    m_MovesHistory.push(EnPassantMove{pawnFrom, pawnTo, pieceSymbol, capturedSymbol, capturedIndex});
 }
 
 void Chess::Game::prepareGUI()

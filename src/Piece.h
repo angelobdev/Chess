@@ -90,7 +90,6 @@ namespace Chess
 
         unsigned int getValue() const
         {
-            unsigned int value = 0;
             switch (getType())
             {
             case Piece::Type::Pawn:
@@ -106,6 +105,37 @@ namespace Chess
             default:
                 return -1;
             }
+        }
+
+        char getSymbol() const
+        {
+            char symbol;
+            switch (getType())
+            {
+            case Piece::Type::Pawn:
+                symbol = 'p';
+                break;
+            case Piece::Type::Knight:
+                symbol = 'n';
+                break;
+            case Piece::Type::Bishop:
+                symbol = 'b';
+                break;
+            case Piece::Type::Rook:
+                symbol = 'r';
+                break;
+            case Piece::Type::Queen:
+                symbol = 'q';
+                break;
+            case Piece::Type::King:
+                symbol = 'k';
+                break;
+            }
+
+            if (getColor() == Piece::Color::White)
+                symbol = std::toupper(symbol);
+
+            return symbol;
         }
 
         // Setters
