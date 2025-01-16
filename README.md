@@ -33,6 +33,7 @@ Simple 2D Chess Game made with C++ and [SFML](https://github.com/SFML/SFML) (+[I
   - [x] Current turn
   - [x] Current score
   - [ ] Captured pieces icons
+  - [ ] Undo move button
 - [x] Windowing
   - [x] Resizable window
 

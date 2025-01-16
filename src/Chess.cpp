@@ -205,6 +205,9 @@ void Chess::Game::registerMove(int from, int to)
     if (from < 0 || from >= 64 || to < 0 || to >= 64)
         return;
 
+    if (m_Pieces[from] == nullptr)
+        return;
+
     char pieceSymbol = m_Pieces[from]->getSymbol();
     char capturedSymbol = 'x';
 
@@ -245,6 +248,9 @@ void Chess::Game::registerCastlingMove(int kingFrom, int kingTo, int rookFrom, i
     if (kingFrom < 0 || kingFrom >= 64 || kingTo < 0 || kingTo >= 64 || rookFrom < 0 || rookFrom >= 64 || rookTo < 0 || rookTo >= 64)
         return;
 
+    if (m_Pieces[kingFrom] == nullptr || m_Pieces[rookFrom] == nullptr)
+        return;
+
     char kingSymbol = m_Pieces[kingFrom]->getSymbol();
     char rookSymbol = m_Pieces[rookFrom]->getSymbol();
 
@@ -268,6 +274,9 @@ void Chess::Game::registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIn
     if (pawnFrom < 0 || pawnFrom >= 64 || pawnTo < 0 || pawnTo >= 64 || capturedIndex < 0 || capturedIndex >= 64)
         return;
 
+    if (m_Pieces[pawnFrom] == nullptr || m_Pieces[capturedIndex] == nullptr)
+        return;
+
     char pieceSymbol = m_Pieces[pawnFrom]->getSymbol();
     char capturedSymbol = m_Pieces[capturedIndex]->getSymbol();
 
@@ -286,6 +295,59 @@ void Chess::Game::registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIn
     m_MovesHistory.push(EnPassantMove{pawnFrom, pawnTo, pieceSymbol, capturedSymbol, capturedIndex});
 }
 
+void Chess::Game::undoLastMove()
+{
+    if (m_MovesHistory.size() == 0)
+        return;
+
+    std::variant<Move, CastlingMove, EnPassantMove> lastMove = m_MovesHistory.top();
+
+    if (std::holds_alternative<Move>(lastMove))
+    {
+        auto move = std::get<Move>(lastMove);
+        std::swap(m_Pieces[move.to], m_Pieces[move.from]);
+        if (move.otherPieceSymbol != 'x')
+        {
+            m_Pieces[move.to] = new Piece(move.otherPieceSymbol, m_Tile);
+            if (m_CurrentTurn == Piece::Color::White)
+            {
+                m_BlackScore -= m_Pieces[move.to]->getValue();
+            }
+            else
+            {
+                m_WhiteScore -= m_Pieces[move.to]->getValue();
+            }
+        }
+        m_Pieces[move.from]->setMoved(false);
+    }
+    else if (std::holds_alternative<CastlingMove>(lastMove))
+    {
+        auto move = std::get<CastlingMove>(lastMove);
+        std::swap(m_Pieces[move.to], m_Pieces[move.from]);
+        std::swap(m_Pieces[move.rookTo], m_Pieces[move.rookFrom]);
+        m_Pieces[move.from]->setMoved(false);
+        m_Pieces[move.rookFrom]->setMoved(false);
+    }
+    else if (std::holds_alternative<EnPassantMove>(lastMove))
+    {
+        auto move = std::get<EnPassantMove>(lastMove);
+        std::swap(m_Pieces[move.to], m_Pieces[move.from]);
+        m_Pieces[move.enPassantTarget] = new Piece(move.otherPieceSymbol, m_Tile);
+        if (m_CurrentTurn == Piece::Color::White)
+        {
+            m_BlackScore -= m_Pieces[move.enPassantTarget]->getValue();
+        }
+        else
+        {
+            m_WhiteScore -= m_Pieces[move.enPassantTarget]->getValue();
+        }
+        m_Pieces[move.from]->setMoved(false);
+    }
+
+    m_MovesHistory.pop();
+    m_CurrentTurn = m_CurrentTurn == Piece::Color::White ? Piece::Color::Black : Piece::Color::White;
+}
+
 void Chess::Game::prepareGUI()
 {
     // Preparing UI
@@ -301,6 +363,11 @@ void Chess::Game::prepareGUI()
         m_FenBuffer = STANDARD_FEN;
         restart();
     };
+    if (ImGui::Button("Undo"))
+    {
+        undoLastMove();
+    }
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -326,6 +393,37 @@ void Chess::Game::prepareGUI()
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
+
+    // DEBUG
+    ImGui::TextColored(ImColor(255, 255, 128), "Debug:");
+    if (ImGui::Button("Print moves history"))
+    {
+        auto tempStack = m_MovesHistory;
+
+        std::cout << "Moves history:" << std::endl;
+        while (!tempStack.empty())
+        {
+            auto move = tempStack.top();
+            tempStack.pop();
+
+            if (std::holds_alternative<Move>(move))
+            {
+                auto m = std::get<Move>(move);
+                std::cout << "Move from " << m.from << " to " << m.to << " with piece " << m.movedPieceSymbol << " capturing " << m.otherPieceSymbol << std::endl;
+            }
+            else if (std::holds_alternative<CastlingMove>(move))
+            {
+                auto m = std::get<CastlingMove>(move);
+                std::cout << "Castling move: King from " << m.from << " to " << m.to << " and Rook from " << m.rookFrom << " to " << m.rookTo << std::endl;
+            }
+            else if (std::holds_alternative<EnPassantMove>(move))
+            {
+                auto m = std::get<EnPassantMove>(move);
+                std::cout << "En Passant move: Pawn from " << m.from << " to " << m.to << " capturing at " << m.enPassantTarget << std::endl;
+            }
+        }
+        std::cout << std::endl;
+    }
 
     ImGui::End();
 }

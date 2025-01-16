@@ -6,7 +6,8 @@
 
 #include <vector>
 #include <array>
-#include <queue>
+#include <stack>
+#include <variant>
 
 #include "Piece.h"
 #include "Move.h"
@@ -26,7 +27,7 @@ namespace Chess
         int m_CurrentSelectedIndex;
 
         std::vector<int> m_PossibleMoves;
-        std::queue<Move> m_MovesHistory;
+        std::stack<std::variant<Move, CastlingMove, EnPassantMove>> m_MovesHistory;
 
         unsigned int m_WhiteScore;
         unsigned int m_BlackScore;
@@ -75,6 +76,7 @@ namespace Chess
         void registerMove(int from, int to);
         void registerCastlingMove(int kingFrom, int kingTo, int rookFrom, int rookTo);
         void registerEnPassantMove(int pawnFrom, int pawnTo, int capturedIndex);
+        void undoLastMove();
 
         void calculatePossibleMoves(int index);
 
